@@ -7,3 +7,6 @@ Stateless.userprefs
 .vs/
 
 project.lock.json
+artifacts/
+TestResult.xml
+*.orig

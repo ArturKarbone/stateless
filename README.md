@@ -1,4 +1,4 @@
-# Stateless [![Build status](https://ci.appveyor.com/api/projects/status/github/dotnet-state-machine/stateless?svg=true)](https://ci.appveyor.com/project/DotnetStateMachine/stateless/branch/master) [![NuGet Pre Release](https://img.shields.io/nuget/vpre/Stateless.svg)](https://www.nuget.org/packages/stateless)
+# Stateless [![Build status](https://ci.appveyor.com/api/projects/status/github/dotnet-state-machine/stateless?svg=true)](https://ci.appveyor.com/project/DotnetStateMachine/stateless/branch/master) [![NuGet Pre Release](https://img.shields.io/nuget/vpre/Stateless.svg)](https://www.nuget.org/packages/stateless) [![Join the chat at https://gitter.im/dotnet-state-machine/stateless](https://badges.gitter.im/dotnet-state-machine/stateless.svg)](https://gitter.im/dotnet-state-machine/stateless?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Stack Overflow](https://img.shields.io/badge/stackoverflow-tag-orange.svg)](http://stackoverflow.com/questions/tagged/stateless-state-machine)
 
 **Create *state machines* and lightweight *state machine-based workflows* directly in .NET code:**
 
@@ -6,7 +6,7 @@
 var phoneCall = new StateMachine<State, Trigger>(State.OffHook);
 
 phoneCall.Configure(State.OffHook)
-    .Permit(Trigger.CallDialed, State.Ringing);
+    .Permit(Trigger.CallDialled, State.Ringing);
 	
 phoneCall.Configure(State.Ringing)
     .Permit(Trigger.HungUp, State.OffHook)
@@ -68,7 +68,7 @@ Entry/Exit event handlers can be supplied with a parameter of type `Transition` 
 
 ### External State Storage
 
-Stateless has been designed with encapsulation within an ORM-ed domain model in mind. Some ORMs place requirements upon where mapped data may be stored. To this end, the `StateMachine` constructor can accept function arguments that will be used to read and write the state values:
+Stateless is designed to be embedded in various application models. For example, some ORMs place requirements upon where mapped data may be stored, and UI frameworks often require state to be stored in special "bindable" properties. To this end, the `StateMachine` constructor can accept function arguments that will be used to read and write the state values:
 
 ```csharp
 var stateMachine = new StateMachine<State, Trigger>(
@@ -140,7 +140,7 @@ It can be useful to visualize state machines on runtime. With this approach the 
  
 ```csharp
 phoneCall.Configure(State.OffHook)
-    .PermitIf(Trigger.CallDialed, State.Ringing, IsValidNumber);
+    .PermitIf(Trigger.CallDialled, State.Ringing, IsValidNumber);
     
 string graph = phoneCall.ToDotGraph();
 ```
@@ -149,16 +149,36 @@ The `StateMachine.ToDotGraph()` method returns a string representation of the st
 
 ```dot
 digraph {
-  OffHook -> Ringing [label="CallDialed [IsValidNumber]"];
+  OffHook -> Ringing [label="CallDialled [IsValidNumber]"];
 }
 ```
 
 This can then be rendered by tools that support the DOT graph language, such as the [dot command line tool](http://www.graphviz.org/doc/info/command.html) from [graphviz.org](http://www.graphviz.org) or [viz.js](https://github.com/mdaines/viz.js). See http://www.webgraphviz.com for instant gratification.
 Command line example: `dot -T pdf -o phoneCall.pdf phoneCall.dot` to generate a PDF file.
 
+### Async triggers
+
+On platforms that provide `Task<T>`, the `StateMachine` supports `async` entry/exit actions and so-on:
+
+```csharp
+stateMachine.Configure(State.Assigned)
+    .OnEntryAsync(async () => await SendEmailToAssignee());
+```
+
+Asynchronous handlers must be registered using the `*Async()` methods in these cases.
+
+To fire a trigger that invokes asynchronous actions, the `FireAsync()` method must be used:
+
+```csharp
+await stateMachine.FireAsync(Trigger.Assigned);
+```
+
+**Note:** while `StateMachine` may be used _asynchronously_, it remains single-threaded and may not be used _concurrently_ by multiple threads.
+
 ## Building
 
-Visual Studio 2015 is required to build this project.
+Stateless runs on .NET 4.0+ and practically all modern .NET platforms by targeting .NET Standard 1.0. Visual Studio 2017 is required to build the solution.
+
 
 ## Project Goals
 
@@ -167,3 +187,5 @@ This page is an almost-complete description of Stateless, and its explicit aim i
 Please use the issue tracker or the if you'd like to report problems or discuss features.
 
 (_Why the name? Stateless implements the set of rules regarding state transitions, but, at least when the delegate version of the constructor is used, doesn't maintain any internal state itself._)
+
+[Visual Studio 2015 and .NET Core]: https://www.microsoft.com/net/core
